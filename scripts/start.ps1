@@ -1,8 +1,7 @@
 <#
 .NOTES
-    Author         : Chris Titus @christitustech
-    Runspace Author: @DeveloperDurp
-    GitHub         : https://github.com/ChrisTitusTech
+    Author         : Berrick Werkman @BKlaasWerkman
+    GitHub         : https://github.com/BKlaasWerkman
     Version        : #{replaceme}
 #>
 param (
