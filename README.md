@@ -14,7 +14,7 @@ Winutil must be run in Admin mode because it performs system-wide tweaks. To ach
 #### Simple way
 
 ```
-irm https://b.werkman.xyz/winutil | iex
+irm b.werkman.xyz/winutil | iex
 ```
 
 or by executing: 
