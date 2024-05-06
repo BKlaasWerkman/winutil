@@ -7510,6 +7510,14 @@ $sync.configs.applications = '{
     "description": "get things from one computer to another, safely",
     "link": "https://github.com/magic-wormhole/magic-wormhole",
     "winget": "magic-wormhole.magic-wormhole"
+  },
+  "WPFInstallveracrypt": {
+    "category": "Utilities",
+    "choco": "veracrypt",
+    "content": "VeraCrypt",
+    "description": "Free and open source disk encryption software with strong security based on TrueCrypt",
+    "link": "https://veracrypt.fr",
+    "winget": "IDRIX.VeraCrypt"
   }
 }' | convertfrom-json
 $sync.configs.dns = '{
