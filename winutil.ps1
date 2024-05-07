@@ -9,7 +9,7 @@
 .NOTES
     Author         : Berrick Werkman @BKlaasWerkman
     GitHub         : https://github.com/BKlaasWerkman
-    Version        : 24.05.06
+    Version        : 24.05.07
 #>
 param (
     [switch]$Debug,
@@ -46,7 +46,7 @@ Add-Type -AssemblyName System.Windows.Forms
 # Variable to sync between runspaces
 $sync = [Hashtable]::Synchronized(@{})
 $sync.PSScriptRoot = $PSScriptRoot
-$sync.version = "24.05.06"
+$sync.version = "24.05.07"
 $sync.configs = @{}
 $sync.ProcessRunning = $false
 
@@ -2733,7 +2733,7 @@ function Invoke-WPFButton {
     Param ([string]$Button)
 
     # Use this to get the name of the button
-    #[System.Windows.MessageBox]::Show("$Button","Chris Titus Tech's Windows Utility","OK","Info")
+    #[System.Windows.MessageBox]::Show("$Button","Berrick's Windows Utility","OK","Info")
 
     Switch -Wildcard ($Button){
 
@@ -3376,10 +3376,10 @@ function Invoke-WPFGetIso {
         $driveLetter = (Get-Volume -DiskImage $mountedISO).DriveLetter
         Write-Host "Iso mounted to '$driveLetter'"
     } catch {
-        # @ChrisTitusTech  please copy this wiki and change the link below to your copy of the wiki
+        # @BKlaasWerkman  please copy this wiki and change the link below to your copy of the wiki
         Write-Error "Failed to mount the image. Error: $($_.Exception.Message)"
         Write-Error "This is NOT winutil's problem, your ISO might be corrupt, or there is a problem on the system"
-        Write-Error "Please refer to this wiki for more details https://github.com/ChrisTitusTech/winutil/blob/main/wiki/Error-in-Winutil-MicroWin-during-ISO-mounting%2Cmd"
+        Write-Error "Please refer to this wiki for more details https://github.com/BKlaasWerkman/winutil/blob/main/wiki/Error-in-Winutil-MicroWin-during-ISO-mounting%2Cmd"
         return
     }
     # storing off values in hidden fields for further steps
@@ -4097,13 +4097,13 @@ function Invoke-WPFOOSU {
         }
         "recommended"{
             $oosu_config = "$ENV:temp\ooshutup10_recommended.cfg"
-            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ChrisTitusTech/winutil/main/config/ooshutup10_recommended.cfg" -OutFile $oosu_config
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/BKlaasWerkman/winutil/main/config/ooshutup10_recommended.cfg" -OutFile $oosu_config
             Write-Host "Applying recommended OO Shutup 10 Policies"
             Start-Process $OOSU_filepath -ArgumentList "$oosu_config /quiet" -Wait
         }
         "undo"{
             $oosu_config = "$ENV:temp\ooshutup10_factory.cfg"
-            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ChrisTitusTech/winutil/main/config/ooshutup10_factory.cfg" -OutFile $oosu_config
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/BKlaasWerkman/winutil/main/config/ooshutup10_factory.cfg" -OutFile $oosu_config
             Write-Host "Resetting all OO Shutup 10 Policies"
             Start-Process $OOSU_filepath -ArgumentList "$oosu_config /quiet" -Wait
         }
@@ -4395,7 +4395,7 @@ function Invoke-WPFToggle {
     Param ([string]$Button)
 
     # Use this to get the name of the button
-    #[System.Windows.MessageBox]::Show("$Button","Chris Titus Tech's Windows Utility","OK","Info")
+    #[System.Windows.MessageBox]::Show("$Button","Berrick's Windows Utility","OK","Info")
 
     Switch -Wildcard ($Button){
 
@@ -10114,7 +10114,7 @@ $sync.configs.tweaks = '{
     "panel": "1",
     "Order": "a026_",
     "InvokeScript": [
-      "\n        #:: Standalone script by AveYo Source: https://raw.githubusercontent.com/AveYo/fox/main/Edge_Removal.bat\n\n        curl.exe -s \"https://raw.githubusercontent.com/ChrisTitusTech/winutil/main/edgeremoval.bat\" -o $ENV:temp\\edgeremoval.bat\n        Start-Process $ENV:temp\\edgeremoval.bat\n\n        "
+      "\n        #:: Standalone script by AveYo Source: https://raw.githubusercontent.com/AveYo/fox/main/Edge_Removal.bat\n\n        curl.exe -s \"https://raw.githubusercontent.com/BKlaasWerkman/winutil/main/edgeremoval.bat\" -o $ENV:temp\\edgeremoval.bat\n        Start-Process $ENV:temp\\edgeremoval.bat\n\n        "
     ],
     "UndoScript": [
       "\n      Write-Host \"Install Microsoft Edge\"\n      Start-Process -FilePath winget -ArgumentList \"install -e --accept-source-agreements --accept-package-agreements --silent Microsoft.Edge \" -NoNewWindow -Wait\n      "

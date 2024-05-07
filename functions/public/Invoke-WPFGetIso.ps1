@@ -122,10 +122,10 @@ function Invoke-WPFGetIso {
         $driveLetter = (Get-Volume -DiskImage $mountedISO).DriveLetter
         Write-Host "Iso mounted to '$driveLetter'"
     } catch {
-        # @ChrisTitusTech  please copy this wiki and change the link below to your copy of the wiki
+        # @BKlaasWerkman  please copy this wiki and change the link below to your copy of the wiki
         Write-Error "Failed to mount the image. Error: $($_.Exception.Message)"
         Write-Error "This is NOT winutil's problem, your ISO might be corrupt, or there is a problem on the system"
-        Write-Error "Please refer to this wiki for more details https://github.com/ChrisTitusTech/winutil/blob/main/wiki/Error-in-Winutil-MicroWin-during-ISO-mounting%2Cmd"
+        Write-Error "Please refer to this wiki for more details https://github.com/BKlaasWerkman/winutil/blob/main/wiki/Error-in-Winutil-MicroWin-during-ISO-mounting%2Cmd"
         return
     }
     # storing off values in hidden fields for further steps
