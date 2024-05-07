@@ -57,7 +57,7 @@
                    "ButtonMargin":  "1",
                    "ButtonCornerRadius": "2",
                    "ToggleButtonHeight": "25",
-                   "BorderColor": "#FFAC1C",
+                   "BorderColor": "#000000",
                    "BorderOpacity": "0.8",
                    "ShadowPulse": "0:0:3"
                },
@@ -87,7 +87,7 @@
                    "ButtonMargin":  "1",
                    "ButtonCornerRadius": "2",
                    "ToggleButtonHeight": "25",
-                   "BorderColor": "#FFAC1C",
+                   "BorderColor": "#000000",
                    "BorderOpacity": "0.2",
                    "ShadowPulse": "Forever"
                }

@@ -7883,7 +7883,7 @@ $sync.configs.themes = '{
     "ButtonMargin": "1",
     "ButtonCornerRadius": "2",
     "ToggleButtonHeight": "25",
-    "BorderColor": "#FFAC1C",
+    "BorderColor": "#000000",
     "BorderOpacity": "0.8",
     "ShadowPulse": "0:0:3"
   },
@@ -7913,7 +7913,7 @@ $sync.configs.themes = '{
     "ButtonMargin": "1",
     "ButtonCornerRadius": "2",
     "ToggleButtonHeight": "25",
-    "BorderColor": "#FFAC1C",
+    "BorderColor": "#000000",
     "BorderOpacity": "0.2",
     "ShadowPulse": "Forever"
   }
