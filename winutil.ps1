@@ -7860,6 +7860,7 @@ $sync.configs.themes = '{
   "Matrix": {
     "ComboBoxBackgroundColor": "#1F1D23",
     "LabelboxForegroundColor": "#DF4D50",
+    "ExtraForegroundColor": "#0C5DAD",
     "MainForegroundColor": "#9CCC65",
     "MainBackgroundColor": "#141317",
     "LabelBackgroundColor": "#141317",
@@ -7890,6 +7891,7 @@ $sync.configs.themes = '{
   "Dark": {
     "ComboBoxBackgroundColor": "#1F1D23",
     "LabelboxForegroundColor": "#DF4D50",
+    "ExtraForegroundColor": "#0C5DAD",
     "MainForegroundColor": "#9CCC65",
     "MainBackgroundColor": "#141317",
     "LabelBackgroundColor": "#141317",
