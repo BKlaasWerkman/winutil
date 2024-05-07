@@ -7914,7 +7914,7 @@ $sync.configs.themes = '{
     "ButtonCornerRadius": "2",
     "ToggleButtonHeight": "25",
     "BorderColor": "#000000",
-    "BorderOpacity": "0.4",
+    "BorderOpacity": "0.1",
     "ShadowPulse": "Forever"
   }
 }' | convertfrom-json
