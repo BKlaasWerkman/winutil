@@ -11060,7 +11060,7 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
                     VerticalAlignment="Center" HorizontalAlignment="Left" 
                     Height="25" Margin="10,0,0,0" BorderThickness="1" Padding="22,2,2,2"
                     Name="CheckboxFilter"
-                    Foreground="{MainForegroundColor}" Background="{MainBackgroundColor}"
+                    Foreground="{ExtraForegroundColor}" Background="{MainBackgroundColor}"
                     ToolTip="Press Ctrl-F and type app name to filter application list below. Press Esc to reset the filter">
                 </TextBox>
                 <TextBlock 
@@ -11089,12 +11089,12 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
                     IsOpen="False"
                     PlacementTarget="{Binding ElementName=SettingsButton}" Placement="Bottom"  
                     HorizontalAlignment="Right" VerticalAlignment="Top">
-                    <Border Background="{MainBackgroundColor}" BorderBrush="{MainForegroundColor}" BorderThickness="1" CornerRadius="0" Margin="0">
+                    <Border Background="{MainBackgroundColor}" BorderBrush="{ExtraForegroundColor}" BorderThickness="1" CornerRadius="0" Margin="0">
                         <StackPanel Background="{MainBackgroundColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                            <MenuItem Header="Import" Name="ImportMenuItem" Foreground="{MainForegroundColor}"/>
-                            <MenuItem Header="Export" Name="ExportMenuItem" Foreground="{MainForegroundColor}"/>
+                            <MenuItem Header="Import" Name="ImportMenuItem" Foreground="{ButtonForegroundColor}"/>
+                            <MenuItem Header="Export" Name="ExportMenuItem" Foreground="{ButtonForegroundColor}"/>
                             <Separator/>
-                            <MenuItem Header="About" Name="AboutMenuItem" Foreground="{MainForegroundColor}"/>
+                            <MenuItem Header="About" Name="AboutMenuItem" Foreground="{ButtonForegroundColor}"/>
                         </StackPanel>
                     </Border>
                 </Popup>
@@ -11108,7 +11108,7 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
                 HorizontalAlignment="Right" VerticalAlignment="Top" 
                 Margin="0,5,5,0" 
                 FontFamily="Arial"
-                Foreground="{MainForegroundColor}" FontSize="18" Name="WPFCloseButton" />
+                Foreground="{ButtonForegroundColor}" FontSize="35" Name="WPFCloseButton" />
             </Grid>
            
         </DockPanel>
