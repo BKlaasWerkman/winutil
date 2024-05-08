@@ -10969,7 +10969,7 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
         </Style>
 
         <Style TargetType="TextBox">
-            <Setter Property="Background" Value="{MainBackgroundColor}"/>
+            <Setter Property="Background" Value="{ButtonBackgroundColor}"/>
             <Setter Property="BorderBrush" Value="{ExtraForegroundColor}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Foreground" Value="{ExtraForegroundColor}"/>
