@@ -2,6 +2,7 @@
     "Classic":  {
                     "ComboBoxBackgroundColor":  "#FFFFFF",
                     "LabelboxForegroundColor":  "#000000",
+                    "ExtraForegroundColor":  "#000000",
                     "MainForegroundColor":  "#000000",
                     "MainBackgroundColor":  "#FFFFFF",
                     "LabelBackgroundColor":  "#FAFAFA",

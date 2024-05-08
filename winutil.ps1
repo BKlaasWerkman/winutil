@@ -7828,6 +7828,7 @@ $sync.configs.themes = '{
   "Classic": {
     "ComboBoxBackgroundColor": "#FFFFFF",
     "LabelboxForegroundColor": "#000000",
+    "ExtraForegroundColor": "#000000",
     "MainForegroundColor": "#000000",
     "MainBackgroundColor": "#FFFFFF",
     "LabelBackgroundColor": "#FAFAFA",
@@ -11062,7 +11063,7 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
                     VerticalAlignment="Center" HorizontalAlignment="Left" 
                     Height="25" Margin="10,0,0,0" BorderThickness="1" Padding="22,2,2,2"
                     Name="CheckboxFilter"
-                    Foreground="{ExtraForegroundColor}" Background="{MainBackgroundColor}"
+                    Foreground="{ButtonForegroundColor}" Background="{MainBackgroundColor}"
                     ToolTip="Press Ctrl-F and type app name to filter application list below. Press Esc to reset the filter">
                 </TextBox>
                 <TextBlock 
@@ -11080,7 +11081,7 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
                     Style="{StaticResource HoverButtonStyle}"
                     Grid.Column="1" BorderBrush="Transparent" 
                     Background="{MainBackgroundColor}"
-                    Foreground="{MainForegroundColor}"
+                    Foreground="{ButtonForegroundColor}"
                     FontSize="18"
                     Width="35" Height="35" 
                     HorizontalAlignment="Right" VerticalAlignment="Top" 
@@ -11110,7 +11111,7 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
                 HorizontalAlignment="Right" VerticalAlignment="Top" 
                 Margin="0,5,5,0" 
                 FontFamily="Arial"
-                Foreground="{ButtonForegroundColor}" FontSize="35" Name="WPFCloseButton" />
+                Foreground="{ButtonForegroundColor}" FontSize="22" Name="WPFCloseButton" />
             </Grid>
            
         </DockPanel>
