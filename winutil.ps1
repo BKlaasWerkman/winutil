@@ -10505,7 +10505,7 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
     <!--ScrollBars-->
     <Style x:Key="{x:Type ScrollBar}" TargetType="{x:Type ScrollBar}">
         <Setter Property="Stylus.IsFlicksEnabled" Value="false" />
-        <Setter Property="Foreground" Value="{MainForegroundColor}" />
+        <Setter Property="Foreground" Value="{ExtraForegroundColor}" />
         <Setter Property="Background" Value="{MainBackgroundColor}" />
         <Setter Property="Width" Value="6" />
         <Setter Property="Template">
@@ -10970,9 +10970,9 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
 
         <Style TargetType="TextBox">
             <Setter Property="Background" Value="{MainBackgroundColor}"/>
-            <Setter Property="BorderBrush" Value="{MainForegroundColor}"/>
+            <Setter Property="BorderBrush" Value="{ExtraForegroundColor}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Foreground" Value="{MainForegroundColor}"/>
+            <Setter Property="Foreground" Value="{ExtraForegroundColor}"/>
             <Setter Property="Padding" Value="5"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
