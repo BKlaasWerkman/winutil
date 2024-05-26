@@ -701,7 +701,7 @@ function Install-WinUtilChoco {
     }
 
 }
- }Function Install-WinUtilProgramWinget {
+ Function Install-WinUtilProgramWinget {
     
     <#
     .SYNOPSIS

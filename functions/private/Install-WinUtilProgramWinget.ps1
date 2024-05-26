@@ -1,4 +1,4 @@
- }Function Install-WinUtilProgramWinget {
+ Function Install-WinUtilProgramWinget {
     
     <#
     .SYNOPSIS
