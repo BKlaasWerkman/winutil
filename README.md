@@ -43,6 +43,15 @@ iex "& { $(irm b.werkman.xyz/winutil) } -Config [path-to-your-config] -Run"
 7. Have a cup of coffee! Come back when it's done.
 
 
+## Images
+
+![WinUtil1](https://github.com/BKlaasWerkman/winutil/assets/105836264/67a40474-8998-421c-814b-e0c35a5a8349)
+
+
+![WinUtil2](https://github.com/BKlaasWerkman/winutil/assets/105836264/fc5fa9d0-d56d-4ffd-b7e9-49a0595b4dfa)
+
+
+
 ## Overview
 
 - Install
@@ -81,21 +90,6 @@ iex "& { $(irm b.werkman.xyz/winutil) } -Config [path-to-your-config] -Run"
   - Security (Recommended) Settings: Offers recommended settings, including a slight delay of feature updates by 2 years and installation of security updates 4 days after release.
 
   - Disable All Updates (Not Recommended!): Allows users to disable all Windows updates, but it's not recommended due to potential security risks.
-
-
-## Issues
-
-If you encounter any challenges or problems with the script, I kindly request that you submit them via the "Issues" tab on the GitHub repository. By filling out the provided template, you can provide specific details about the issue, allowing me to promptly address any bugs or consider feature requests.
-
-## Contribute Code
-
-To contribute new code, please ensure that it is submitted to the **TEST BRANCH**. Please note that merges will not be performed directly on the MAIN branch.
-
-When creating pull requests, it is essential to thoroughly document all changes made. This includes documenting any additions made to the tweaks section and ensuring that corresponding undo measures are in place to remove the newly added tweaks if necessary. Failure to adhere to this format may result in denial of the pull request. Additionally, comprehensive documentation is required for all code changes. Any code lacking sufficient documentation may also be denied.
-
-By following these guidelines, we can maintain a high standard of quality and ensure that the codebase remains organized and well-documented.
-
-NOTE: When creating a function please include "WPF" or "WinUtil" in the name so that it can be loaded into the runspace.
 
 
 
