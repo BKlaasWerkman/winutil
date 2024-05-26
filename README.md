@@ -32,9 +32,7 @@ irm https://raw.githubusercontent.com/BKlaasWerkman/winutil/main/winutil.ps1 | i
 Some features are avaliable through automation. This allows you to save your config file pass it to Winutil walk away and come back to a finished system. Here is how you can set it up currently with Winutil >24.01.15
 
 1. On the Install Tab, click "Get Installed", this will get all installed apps **supported by Winutil** on the system
-  ![GetInstalled](/wiki/Get-Installed.png)
 2. Click on the Settings cog in the upper right corner and chose Export, chose file file and location, this will export the setting file.
-  ![SettingsExport](/wiki/Settings-Export.png)
 3. Copy this file to a USB or somewhere you can use after Windows installation.
 4. Use Microwin tab to create a custom Windows image.
 5. Install the Windows image.

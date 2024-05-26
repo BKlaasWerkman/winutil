@@ -9,7 +9,7 @@
 .NOTES
     Author         : Berrick Werkman @BKlaasWerkman
     GitHub         : https://github.com/BKlaasWerkman
-    Version        : 24.05.07
+    Version        : 24.05.26
 #>
 param (
     [switch]$Debug,
@@ -46,7 +46,7 @@ Add-Type -AssemblyName System.Windows.Forms
 # Variable to sync between runspaces
 $sync = [Hashtable]::Synchronized(@{})
 $sync.PSScriptRoot = $PSScriptRoot
-$sync.version = "24.05.07"
+$sync.version = "24.05.26"
 $sync.configs = @{}
 $sync.ProcessRunning = $false
 
@@ -4408,6 +4408,51 @@ function Invoke-WPFToggle {
         "WPFToggleMouseAcceleration" {Invoke-WinUtilMouseAcceleration $(Get-WinUtilToggleStatus WPFToggleMouseAcceleration)}
         "WPFToggleStickyKeys" {Invoke-WinUtilStickyKeys $(Get-WinUtilToggleStatus WPFToggleStickyKeys)}
         "WPFToggleTaskbarWidgets" {Invoke-WinUtilTaskbarWidgets $(Get-WinUtilToggleStatus WPFToggleTaskbarWidgets)}
+    }
+}
+function Invoke-WPFTweakPS7{
+  <#
+  .SYNPOSIS
+    This will edit the config file of the Windows Terminal Replacing the Powershell 5 to Powershell 7 and install Powershell 7 if necessary
+  .PARAMETER action
+    PS7: Configures Powershell 7 to be the default Terminal
+    PS5: Configures Powershell 5 to be the default Terminal
+  #>
+  param (
+    [ValidateSet("PS7", "PS5")]
+    [string]$action
+  )
+
+  switch ($action) {
+    "PS7" {
+      if (Test-Path -Path "$env:ProgramFiles\PowerShell\7")
+      {
+        Write-Host "Powershell 7 is already installed."
+      } else {
+        Write-Host "Installing Powershell 7..."
+        Install-WinUtilProgramWinget -ProgramsToInstall @(@{"winget"="Microsoft.PowerShell"})
+      }
+      $targetTerminalName = "PowerShell"
+      }
+      "PS5" {
+        $targetTerminalName = "Windows PowerShell"
+      }
+    }
+    $settingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+    if (Test-Path -Path $settingsPath) {
+      Write-Host "Settings file found."
+      $settingsContent = Get-Content -Path $settingsPath | ConvertFrom-Json
+      $ps7Profile = $settingsContent.profiles.list | Where-Object { $_.name -eq $targetTerminalName }
+      if ($ps7Profile) {
+        $settingsContent.defaultProfile = $ps7Profile.guid
+        $updatedSettings = $settingsContent | ConvertTo-Json -Depth 100
+        Set-Content -Path $settingsPath -Value $updatedSettings
+        Write-Host "Default profile updated to $targetTerminalName using the name attribute."
+      } else {
+        Write-Host "No PowerShell 7 profile found in Windows Terminal settings using the name attribute."
+      }
+    } else {
+      Write-Host "Settings file not found at $settingsPath"
     }
 }
 function Invoke-WPFtweaksbutton {
@@ -10083,6 +10128,19 @@ $sync.configs.tweaks = '{
       "\n      Set-ItemProperty -Path \"HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\\TaskbarDeveloperSettings\" -Name \"TaskbarEndTask\" -Type \"DWord\" -Value \"0\"\n      "
     ]
   },
+  "WPFTweaksPowershell7": {
+    "Content": "Replace Default Powershell 5 to Powershell 7",
+    "Description": "This will edit the config file of the Windows Terminal Replacing the Powershell 5 to Powershell 7 and install Powershell 7 if necessary",
+    "category": "Essential Tweaks",
+    "panel": "1",
+    "Order": "a007_",
+    "InvokeScript": [
+      "Invoke-WPFTweakPS7 -action \"PS7\""
+    ],
+    "UndoScript": [
+      "Invoke-WPFTweakPS7 -action \"PS5\""
+    ]
+  },
   "WPFTweaksOO": {
     "Content": "Run OO Shutup",
     "Description": "Runs OO Shutup and applies the recommended Tweaks. https://www.oo-software.com/en/shutup10",
@@ -12181,6 +12239,7 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
 <CheckBox Name="WPFTweaksAH" Content="Disable Activity History" Margin="5,0"  ToolTip="This erases recent docs, clipboard, and run history."/>
 <CheckBox Name="WPFTweaksDeleteTempFiles" Content="Delete Temporary Files" Margin="5,0"  ToolTip="Erases TEMP Folders"/>
 <CheckBox Name="WPFTweaksDiskCleanup" Content="Run Disk Cleanup" Margin="5,0"  ToolTip="Runs Disk Cleanup on Drive C: and removes old Windows Updates."/>
+<CheckBox Name="WPFTweaksPowershell7" Content="Replace Default Powershell 5 to Powershell 7" Margin="5,0"  ToolTip="This will edit the config file of the Windows Terminal Replacing the Powershell 5 to Powershell 7 and install Powershell 7 if necessary"/>
 <CheckBox Name="WPFTweaksLoc" Content="Disable Location Tracking" Margin="5,0"  ToolTip="Disables Location Tracking...DUH!"/>
 <CheckBox Name="WPFTweaksHome" Content="Disable Homegroup" Margin="5,0"  ToolTip="Disables HomeGroup - HomeGroup is a password-protected home networking service that lets you share your stuff with other PCs that are currently running and connected to your network."/>
 <CheckBox Name="WPFTweaksStorage" Content="Disable Storage Sense" Margin="5,0"  ToolTip="Storage Sense deletes temp files automatically."/>
