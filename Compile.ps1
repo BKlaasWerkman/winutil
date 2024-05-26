@@ -56,6 +56,11 @@ Get-ChildItem .\config | Where-Object {$psitem.extension -eq ".json"} | ForEach-
     Write-output "`$sync.configs.$($psitem.BaseName) = '$json' `| convertfrom-json" | Out-File ./$scriptname -Append -Encoding ascii
 }
 
+Get-ChildItem .\config | Where-Object {$PSItem.Extension -eq ".cfg"} | ForEach-Object {
+    Write-output "`$sync.configs.$($psitem.BaseName) = '$(Get-Content $PSItem.FullName)'" | Out-File ./$scriptname -Append -Encoding ascii
+}
+
+
 $xaml = (Get-Content .\xaml\inputXML.xaml).replace("'","''")
 
 # Dot-source the Get-TabXaml function

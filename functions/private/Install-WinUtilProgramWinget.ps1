@@ -12,7 +12,6 @@
     
     .NOTES
     The triple quotes are required any time you need a " in a normal script block.
-    The winget Return codes are documented here: https://github.com/microsoft/winget-cli/blob/master/doc/windows/package-manager/winget/returnCodes.md
     #>
     
     param(

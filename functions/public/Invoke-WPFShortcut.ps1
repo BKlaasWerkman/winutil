@@ -33,11 +33,20 @@ function Invoke-WPFShortcut {
             }
         }
 
+    # Show a File Dialog Browser, to let the User choose the Name and Location of where to save the Shortcut
+
     $FileBrowser = New-Object System.Windows.Forms.SaveFileDialog
     $FileBrowser.InitialDirectory = [Environment]::GetFolderPath('Desktop')
     $FileBrowser.Filter = "Shortcut Files (*.lnk)|*.lnk"
     $FileBrowser.FileName = $DestinationName
-    $FileBrowser.ShowDialog() | Out-Null
+   
+    # Do an Early Return if The Save Shortcut operation was cancel by User's Input.
+    $FileBrowserResult = $FileBrowser.ShowDialog()
+    $DialogResultEnum = New-Object System.Windows.Forms.DialogResult
+    if (-not ($FileBrowserResult -eq $DialogResultEnum::OK)) {
+        return
+    }
+
 
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($FileBrowser.FileName)

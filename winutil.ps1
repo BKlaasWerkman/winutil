@@ -50,17 +50,8 @@ $sync.version = "24.05.26"
 $sync.configs = @{}
 $sync.ProcessRunning = $false
 
-$currentPid = [System.Security.Principal.WindowsIdentity]::GetCurrent()
-$principal = new-object System.Security.Principal.WindowsPrincipal($currentPid)
-$adminRole=[System.Security.Principal.WindowsBuiltInRole]::Administrator
-
-
-if ($principal.IsInRole($adminRole))
-{
-    $Host.UI.RawUI.WindowTitle = $myInvocation.MyCommand.Definition + "(Admin)"
-    clear-host
-}
-else
+# If script isn't running as admin, show error message and quit
+If (([Security.Principal.WindowsIdentity]::GetCurrent()).Owner.Value -ne "S-1-5-32-544")
 {
     Write-Host "===========================================" -Foregroundcolor Red
     Write-Host "-- Scripts must be run as Administrator ---" -Foregroundcolor Red
@@ -68,6 +59,10 @@ else
     Write-Host "===========================================" -Foregroundcolor Red
     break
 }
+
+# Set PowerShell window title
+$Host.UI.RawUI.WindowTitle = $myInvocation.MyCommand.Definition + "(Admin)"
+clear-host
 function ConvertTo-Icon { 
     <#
     
@@ -350,8 +345,9 @@ function Get-TabXaml {
                 }
                 $appInfo = $organizedData[$panel][$category][$appName]
                 if ("Toggle" -eq $appInfo.Type) {
-                    $blockXml += "<StackPanel Orientation=`"Horizontal`" Margin=`"0,10,0,0`">`n<Label Content=`"$($appInfo.Content)`" Style=`"{StaticResource labelfortweaks}`" ToolTip=`"$($appInfo.Description)`" />`n"
-                    $blockXml += "<CheckBox Name=`"$($appInfo.Name)`" Style=`"{StaticResource ColorfulToggleSwitchStyle}`" Margin=`"2.5,0`"/>`n</StackPanel>`n"
+                    $blockXml += "<StackPanel Orientation=`"Horizontal`" Margin=`"0,10,0,0`">`n"
+                    $blockXml += "<CheckBox Name=`"$($appInfo.Name)`" Style=`"{StaticResource ColorfulToggleSwitchStyle}`" Margin=`"2.5,0`"/>`n"
+                    $blockXml += "<Label Content=`"$($appInfo.Content)`" Style=`"{StaticResource labelfortweaks}`" ToolTip=`"$($appInfo.Description)`" />`n</StackPanel>`n"
                 } elseif ("Combobox" -eq $appInfo.Type) {
                     $blockXml += "<StackPanel Orientation=`"Horizontal`" Margin=`"0,5,0,0`">`n<Label Content=`"$($appInfo.Content)`" HorizontalAlignment=`"Left`" VerticalAlignment=`"Center`"/>`n"
                     $blockXml += "<ComboBox Name=`"$($appInfo.Name)`"  Height=`"32`" Width=`"186`" HorizontalAlignment=`"Left`" VerticalAlignment=`"Center`" Margin=`"5,5`">`n"
@@ -389,9 +385,6 @@ Function Get-WinUtilCheckBoxes {
     .SYNOPSIS
         Finds all checkboxes that are checked on the specific tab and inputs them into a script.
 
-    .PARAMETER Group
-        The group of checkboxes to check
-
     .PARAMETER unCheck
         Whether to uncheck the checkboxes that are checked. Defaults to true
 
@@ -416,23 +409,33 @@ Function Get-WinUtilCheckBoxes {
 
     $CheckBoxes = $sync.GetEnumerator() | Where-Object { $_.Value -is [System.Windows.Controls.CheckBox] }
 
+    # First check and add WPFTweaksRestorePoint if checked
+    $RestorePoint = $CheckBoxes | Where-Object { $_.Key -eq 'WPFTweaksRestorePoint' -and $_.Value.IsChecked -eq $true }
+    if ($RestorePoint) {
+        $Output["WPFTweaks"] = @('WPFTweaksRestorePoint')
+        Write-Debug "Adding WPFTweaksRestorePoint as first in WPFTweaks"
+
+        if ($unCheck) {
+            $RestorePoint.Value.IsChecked = $false
+        }
+    }
+
     foreach ($CheckBox in $CheckBoxes) {
+        if ($CheckBox.Key -eq 'WPFTweaksRestorePoint') { continue }  # Skip since it's already handled
+
         $group = if ($CheckBox.Key.StartsWith("WPFInstall")) { "Install" }
                 elseif ($CheckBox.Key.StartsWith("WPFTweaks")) { "WPFTweaks" }
                 elseif ($CheckBox.Key.StartsWith("WPFFeature")) { "WPFFeature" }
-
         if ($group) {
             if ($CheckBox.Value.IsChecked -eq $true) {
                 $feature = switch ($group) {
                     "Install" {
                         # Get the winget value
-                        $wingetValue = $sync.configs.applications.$($CheckBox.Name).winget
-
-                        if (-not [string]::IsNullOrWhiteSpace($wingetValue) -and $wingetValue -ne "na") {
-                            $wingetValue -split ";"
-                        } else {
-                            $sync.configs.applications.$($CheckBox.Name).choco
+                        [PsCustomObject]@{
+                            winget="$($sync.configs.applications.$($CheckBox.Name).winget)";
+                            choco="$($sync.configs.applications.$($CheckBox.Name).choco)";
                         }
+
                     }
                     default {
                         $CheckBox.Name
@@ -450,13 +453,12 @@ Function Get-WinUtilCheckBoxes {
                 Write-Debug "Adding: $($feature) under: $($group)"
                 $Output[$group] += $feature
 
-                if ($uncheck -eq $true) {
+                if ($unCheck) {
                     $CheckBox.Value.IsChecked = $false
                 }
             }
         }
     }
-
     return  $Output
 }
 function Get-WinUtilInstallerProcess {
@@ -544,6 +546,15 @@ Function Get-WinUtilToggleStatus {
             return $false
         }
     }    
+    if($ToggleSwitch -eq "WPFToggleSnapWindow"){
+        $hidesnap = (Get-ItemProperty -path 'HKCU:\Control Panel\Desktop').WindowArrangementActive
+        if($hidesnap -eq 0){
+            return $false
+        }
+        else{
+            return $true
+        }
+    }
     if($ToggleSwitch -eq "WPFToggleSnapFlyout"){
         $hidesnap = (Get-ItemProperty -path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced').EnableSnapAssistFlyout
         if($hidesnap -eq 0){
@@ -553,6 +564,15 @@ Function Get-WinUtilToggleStatus {
             return $true
         }
     }    
+    if($ToggleSwitch -eq "WPFToggleSnapSuggestion"){
+        $hidesnap = (Get-ItemProperty -path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced').SnapAssist
+        if($hidesnap -eq 0){
+            return $false
+        }
+        else{
+            return $true
+        }
+    }        
     if($ToggleSwitch -eq "WPFToggleMouseAcceleration"){
         $MouseSpeed = (Get-ItemProperty -path 'HKCU:\Control Panel\Mouse').MouseSpeed
         $MouseThreshold1 = (Get-ItemProperty -path 'HKCU:\Control Panel\Mouse').MouseThreshold1
@@ -701,6 +721,58 @@ function Install-WinUtilChoco {
     }
 
 }
+function Install-WinUtilProgramChoco {
+    <#
+    .SYNOPSIS
+    Manages the provided programs using Chocolatey
+    
+    .PARAMETER ProgramsToInstall
+    A list of programs to manage
+    
+    .PARAMETER manage
+    The action to perform on the programs, can be either 'Installing' or 'Uninstalling'
+    
+    .NOTES
+    The triple quotes are required any time you need a " in a normal script block.
+    #>
+    
+    param(
+    $ProgramsToInstall,
+    $manage = "Installing"
+    )
+    
+    $x = 0
+    $count = $ProgramsToInstall.Count
+    
+    Write-Progress -Activity "$manage Applications" -Status "Starting" -PercentComplete 0
+    Write-Host "==========================================="
+    Write-Host "--   insstalling Chocolatey pacakages   ---"
+    Write-Host "==========================================="
+    Foreach ($Program in $ProgramsToInstall){
+        Write-Progress -Activity "$manage Applications" -Status "$manage $($Program.choco) $($x + 1) of $count" -PercentComplete $($x/$count*100)
+        if($manage -eq "Installing"){
+            write-host "Starting install of $($Program.choco) with Chocolatey."
+            try{
+                $chocoStatus = $(Start-Process -FilePath "choco" -ArgumentList "install $($Program.choco) -y" -Wait -PassThru).ExitCode
+                if($chocoStatus -eq 0){
+                    Write-Host "$($Program.choco) installed successfully using Chocolatey."
+                    continue
+                } else {
+                    Write-Host "Failed to install $($Program.choco) using Chocolatey."
+                }
+                Write-Host "Failed to install $($Program.choco)."
+            } catch {
+                Write-Host "Failed to install $($Program.choco) due to an error: $_"
+            }
+        }
+        if($manage -eq "Uninstalling"){
+            throw "not yet implemented";
+        }
+        $X++
+    }
+    Write-Progress -Activity "$manage Applications" -Status "Finished" -Completed
+    return;
+}
  Function Install-WinUtilProgramWinget {
     
     <#
@@ -715,7 +787,6 @@ function Install-WinUtilChoco {
     
     .NOTES
     The triple quotes are required any time you need a " in a normal script block.
-    The winget Return codes are documented here: https://github.com/microsoft/winget-cli/blob/master/doc/windows/package-manager/winget/returnCodes.md
     #>
     
     param(
@@ -1957,6 +2028,71 @@ function Invoke-WinUtilSnapFlyout {
         Write-Warning $psitem.Exception.StackTrace
     }
 }
+function Invoke-WinUtilSnapSuggestion {
+    <#
+    .SYNOPSIS
+        Disables/Enables Snap Assist Suggestions on startup
+    .PARAMETER Enabled
+        Indicates whether to enable or disable Snap Assist Suggestions on startup
+    #>
+    Param($Enabled)
+    Try{
+        if ($Enabled -eq $false){
+            Write-Host "Enabling Snap Assist Suggestion On startup"
+            $value = 1
+        }
+        else {
+            Write-Host "Disabling Snap Assist Suggestion On startup"
+            $value = 0
+        }
+        # taskkill.exe /F /IM "explorer.exe"
+        $Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+        taskkill.exe /F /IM "explorer.exe"
+        Set-ItemProperty -Path $Path -Name SnapAssist -Value $value
+        Start-Process "explorer.exe"
+    }
+    Catch [System.Security.SecurityException] {
+        Write-Warning "Unable to set $Path\$Name to $Value due to a Security Exception"
+    }
+    Catch [System.Management.Automation.ItemNotFoundException] {
+        Write-Warning $psitem.Exception.ErrorRecord
+    }
+    Catch{
+        Write-Warning "Unable to set $Name due to unhandled exception"
+        Write-Warning $psitem.Exception.StackTrace
+    }
+}
+function Invoke-WinUtilSnapWindow {
+    <#
+    .SYNOPSIS
+        Disables/Enables Snapping Windows on startup
+    .PARAMETER Enabled
+        Indicates whether to enable or disable Snapping Windows on startup
+    #>
+    Param($Enabled)
+    Try{
+        if ($Enabled -eq $false){
+            Write-Host "Enabling Snap Windows On startup | Relogin Required"
+            $value = 1
+        }
+        else {
+            Write-Host "Disabling Snap Windows On startup | Relogin Required"
+            $value = 0
+        }
+        $Path = "HKCU:\Control Panel\Desktop"
+        Set-ItemProperty -Path $Path -Name WindowArrangementActive -Value $value
+    }
+    Catch [System.Security.SecurityException] {
+        Write-Warning "Unable to set $Path\$Name to $Value due to a Security Exception"
+    }
+    Catch [System.Management.Automation.ItemNotFoundException] {
+        Write-Warning $psitem.Exception.ErrorRecord
+    }
+    Catch{
+        Write-Warning "Unable to set $Name due to unhandled exception"
+        Write-Warning $psitem.Exception.StackTrace
+    }
+}
 Function Invoke-WinUtilStickyKeys {
     <#
     .SYNOPSIS
@@ -2615,13 +2751,22 @@ function Test-WinUtilPackageManager {
     $status = "not-installed"
 
     if ($winget) {
-        # Install Winget if not detected
-        $wingetExists = Get-Command -Name winget -ErrorAction SilentlyContinue
+        # Check if Winget is available while getting it's Version if it's available
+        $wingetExists = $true
+        try {
+            $wingetVersionFull = winget --version
+        } catch [System.Management.Automation.CommandNotFoundException], [System.Management.Automation.ApplicationFailedException] {
+            Write-Warning "Winget was not found due to un-availablity reasons"
+            $wingetExists = $false
+        } catch {
+            Write-Warning "Winget was not found due to un-known reasons, The Stack Trace is:`n$($psitem.Exception.StackTrace)"
+            $wingetExists = $false
+	}
 
-        if ($wingetExists) {
-            # Check Winget Version
-            $wingetVersionFull = (winget --version) # Full Version without 'v'.
-
+        # If Winget is available, Parse it's Version and give proper information to Terminal Output.
+	# If it isn't available, the return of this funtion will be "not-installed", indicating that
+        # Winget isn't installed/available on The System.
+	if ($wingetExists) {
             # Check if Preview Version
             if ($wingetVersionFull.Contains("-preview")) {
                 $wingetVersion = $wingetVersionFull.Trim("-preview")
@@ -2754,9 +2899,8 @@ function Invoke-WPFButton {
         "WPFinstall" {Invoke-WPFInstall}
         "WPFuninstall" {Invoke-WPFUnInstall}
         "WPFInstallUpgrade" {Invoke-WPFInstallUpgrade}
-        "WPFdesktop" {Invoke-WPFPresets "Desktop"}
-        "WPFlaptop" {Invoke-WPFPresets "laptop"}
-        "WPFminimal" {Invoke-WPFPresets "minimal"}
+        "WPFstandard" {Invoke-WPFPresets "Standard"}
+        "WPFminimal" {Invoke-WPFPresets "Minimal"}
         "WPFclear" {Invoke-WPFPresets -preset $null -imported $true}
         "WPFclearWinget" {Invoke-WPFPresets -preset $null -imported $true -CheckBox "WPFInstall"}
         "WPFtweaksbutton" {Invoke-WPFtweaksbutton}
@@ -3588,23 +3732,43 @@ function Invoke-WPFInstall {
         return
     }
 
-    $WingetInstall = (Get-WinUtilCheckBoxes)["Install"]
-
-    if ($wingetinstall.Count -eq 0) {
+    $PackagesToInstall = (Get-WinUtilCheckBoxes)["Install"]
+    Write-Host $PackagesToInstall
+    if ($PackagesToInstall.Count -eq 0) {
         $WarningMsg = "Please select the program(s) to install or upgrade"
         [System.Windows.MessageBox]::Show($WarningMsg, $AppTitle, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
         return
     }
 
-    Invoke-WPFRunspace -ArgumentList $WingetInstall -DebugPreference $DebugPreference -ScriptBlock {
-        param($WingetInstall, $DebugPreference)
+    Invoke-WPFRunspace -ArgumentList $PackagesToInstall -DebugPreference $DebugPreference -ScriptBlock {
+        param($PackagesToInstall, $DebugPreference)
+        $packagesWinget, $packagesChoco = {
+            $packagesWinget = [System.Collections.Generic.List`1[System.Object]]::new()
+            $packagesChoco = [System.Collections.Generic.List`1[System.Object]]::new()
+            foreach ($package in $PackagesToInstall) {
+                if ($package.winget -eq "na") {
+                    $packagesChoco.add($package)
+                    Write-Host "Queueing $($package.choco) for Chocolatey install"
+                } else {
+                    $packagesWinget.add($package)
+                    Write-Host "Queueing $($package.winget) for Winget install"
+                }
+            }
+            return $packagesWinget, $packagesChoco
+        }.Invoke($PackagesToInstall)
 
         try{
             $sync.ProcessRunning = $true
-
-            Install-WinUtilWinget
-            Install-WinUtilProgramWinget -ProgramsToInstall $WingetInstall
-
+            $errorPackages = @()
+            if($packagesWinget.Count -gt 0){
+                Install-WinUtilWinget
+                $errorPackages += Install-WinUtilProgramWinget -ProgramsToInstall $packagesWinget
+                $errorPackages| ForEach-Object {if($_.choco -ne "na") {$packagesChoco += $_}}
+            }
+            if($packagesChoco.Count -gt 0){
+                Install-WinUtilChoco
+                Install-WinUtilProgramChoco -ProgramsToInstall $packagesChoco
+            }
             Write-Host "==========================================="
             Write-Host "--      Installs have finished          ---"
             Write-Host "==========================================="
@@ -3697,6 +3861,7 @@ public class PowerManagement {
 	$keepEdge = $sync.WPFMicrowinKeepEdge.IsChecked
 	$copyToUSB = $sync.WPFMicrowinCopyToUsb.IsChecked
 	$injectDrivers = $sync.MicrowinInjectDrivers.IsChecked
+	$importDrivers = $sync.MicrowinImportDrivers.IsChecked
 
     $mountDir = $sync.MicrowinMountDir.Text
     $scratchDir = $sync.MicrowinScratchDir.Text
@@ -3755,13 +3920,54 @@ public class PowerManagement {
             return
         }
 
+		if ($importDrivers)
+		{
+			Write-Host "Exporting drivers from active installation..."
+			if (Test-Path "$env:TEMP\DRV_EXPORT")
+			{
+				Remove-Item "$env:TEMP\DRV_EXPORT" -Recurse -Force
+			}
+			if (($injectDrivers -and (Test-Path $sync.MicrowinDriverLocation.Text)))
+			{
+				Write-Host "Using specified driver source..."
+				dism /english /online /export-driver /destination="$($sync.MicrowinDriverLocation.Text)" | Out-Host
+				if ($?)
+				{
+					# Don't add exported drivers yet, that is run later
+					Write-Host "Drivers have been exported successfully."
+				}
+				else
+				{
+					Write-Host "Failed to export drivers."
+				}
+			}
+			else
+			{
+				New-Item -Path "$env:TEMP\DRV_EXPORT" -ItemType Directory -Force
+				dism /english /online /export-driver /destination="$env:TEMP\DRV_EXPORT" | Out-Host
+				if ($?)
+				{
+					Write-Host "Adding exported drivers..."
+					dism /english /image="$scratchDir" /add-driver /driver="$env:TEMP\DRV_EXPORT" /recurse | Out-Host
+				}
+				else
+				{
+					Write-Host "Failed to export drivers. Continuing without importing them..."
+				}
+				if (Test-Path "$env:TEMP\DRV_EXPORT")
+				{
+					Remove-Item "$env:TEMP\DRV_EXPORT" -Recurse -Force
+				}				
+			}
+		}
+
 		if ($injectDrivers)
 		{
 			$driverPath = $sync.MicrowinDriverLocation.Text
 			if (Test-Path $driverPath)
 			{
 				Write-Host "Adding Windows Drivers image($scratchDir) drivers($driverPath) "
-				Add-WindowsDriver -Path "$scratchDir" -Recurse -Driver "$driverPath"
+				dism /English /image:$scratchDir /add-driver /driver:$driverPath /recurse | Out-Host
 			}
 			else 
 			{
@@ -3846,7 +4052,7 @@ public class PowerManagement {
 		$desktopDir = "$($scratchDir)\Windows\Users\Default\Desktop"
 		New-Item -ItemType Directory -Force -Path "$desktopDir"
 	    dism /English /image:$($scratchDir) /set-profilepath:"$($scratchDir)\Windows\Users\Default"
-		$command = "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command 'irm https://b.werkman.xyz/winutil | iex'"
+		$command = "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command 'irm https://christitus.com/win | iex'"
 		$shortcutPath = "$desktopDir\WinUtil.lnk"
 		$shell = New-Object -ComObject WScript.Shell
 		$shortcut = $shell.CreateShortcut($shortcutPath)
@@ -3979,7 +4185,7 @@ public class PowerManagement {
 			if (Test-Path $driverPath)
 			{
 				Write-Host "Adding Windows Drivers image($scratchDir) drivers($driverPath) "
-				Add-WindowsDriver -Path "$scratchDir" -Driver "$driverPath" -Recurse
+				dism /English /image:$scratchDir /add-driver /driver:$driverPath /recurse | Out-Host
 			}
 			else 
 			{
@@ -4109,14 +4315,12 @@ function Invoke-WPFOOSU {
             Start-Process $OOSU_filepath
         }
         "recommended"{
-            $oosu_config = "$ENV:temp\ooshutup10_recommended.cfg"
-            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/BKlaasWerkman/winutil/main/config/ooshutup10_recommended.cfg" -OutFile $oosu_config
+            New-Item -Path $ENV:temp\ooshutup10_recommended.cfg -ItemType File -Value $sync.configs.ooshutup10_recommended -Force
             Write-Host "Applying recommended OO Shutup 10 Policies"
             Start-Process $OOSU_filepath -ArgumentList "$oosu_config /quiet" -Wait
         }
         "undo"{
-            $oosu_config = "$ENV:temp\ooshutup10_factory.cfg"
-            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/BKlaasWerkman/winutil/main/config/ooshutup10_factory.cfg" -OutFile $oosu_config
+            New-Item -Path $ENV:temp\ooshutup10_factory.cfg -ItemType File -Value $sync.configs.ooshutup10_factory -Force
             Write-Host "Resetting all OO Shutup 10 Policies"
             Start-Process $OOSU_filepath -ArgumentList "$oosu_config /quiet" -Wait
         }
@@ -4338,11 +4542,20 @@ function Invoke-WPFShortcut {
             }
         }
 
+    # Show a File Dialog Browser, to let the User choose the Name and Location of where to save the Shortcut
+
     $FileBrowser = New-Object System.Windows.Forms.SaveFileDialog
     $FileBrowser.InitialDirectory = [Environment]::GetFolderPath('Desktop')
     $FileBrowser.Filter = "Shortcut Files (*.lnk)|*.lnk"
     $FileBrowser.FileName = $DestinationName
-    $FileBrowser.ShowDialog() | Out-Null
+   
+    # Do an Early Return if The Save Shortcut operation was cancel by User's Input.
+    $FileBrowserResult = $FileBrowser.ShowDialog()
+    $DialogResultEnum = New-Object System.Windows.Forms.DialogResult
+    if (-not ($FileBrowserResult -eq $DialogResultEnum::OK)) {
+        return
+    }
+
 
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($FileBrowser.FileName)
@@ -4417,7 +4630,9 @@ function Invoke-WPFToggle {
         "WPFToggleNumLock" {Invoke-WinUtilNumLock $(Get-WinUtilToggleStatus WPFToggleNumLock)}
         "WPFToggleVerboseLogon" {Invoke-WinUtilVerboseLogon $(Get-WinUtilToggleStatus WPFToggleVerboseLogon)}
         "WPFToggleShowExt" {Invoke-WinUtilShowExt $(Get-WinUtilToggleStatus WPFToggleShowExt)}
+        "WPFToggleSnapWindow" {Invoke-WinUtilSnapWindow $(Get-WinUtilToggleStatus WPFToggleSnapWindow)}
         "WPFToggleSnapFlyout" {Invoke-WinUtilSnapFlyout $(Get-WinUtilToggleStatus WPFToggleSnapFlyout)}
+        "WPFToggleSnapSuggestion" {Invoke-WinUtilSnapSuggestion $(Get-WinUtilToggleStatus WPFToggleSnapSuggestion)}
         "WPFToggleMouseAcceleration" {Invoke-WinUtilMouseAcceleration $(Get-WinUtilToggleStatus WPFToggleMouseAcceleration)}
         "WPFToggleStickyKeys" {Invoke-WinUtilStickyKeys $(Get-WinUtilToggleStatus WPFToggleStickyKeys)}
         "WPFToggleTaskbarWidgets" {Invoke-WinUtilTaskbarWidgets $(Get-WinUtilToggleStatus WPFToggleTaskbarWidgets)}
@@ -4808,9 +5023,9 @@ function Invoke-WPFUnInstall {
         return
     }
 
-    $WingetInstall = (Get-WinUtilCheckBoxes)["Install"]
+    $PackagesToInstall = (Get-WinUtilCheckBoxes)["Install"]
 
-    if ($wingetinstall.Count -eq 0) {
+    if ($PackagesToInstall.Count -eq 0) {
         $WarningMsg = "Please select the program(s) to install"
         [System.Windows.MessageBox]::Show($WarningMsg, $AppTitle, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
         return
@@ -4818,21 +5033,39 @@ function Invoke-WPFUnInstall {
 
     $ButtonType = [System.Windows.MessageBoxButton]::YesNo
     $MessageboxTitle = "Are you sure?"
-    $Messageboxbody = ("This will uninstall the following applications: `n $WingetInstall")
+    $Messageboxbody = ("This will uninstall the following applications: `n $($PackagesToInstall | Format-Table | Out-String)")
     $MessageIcon = [System.Windows.MessageBoxImage]::Information
 
     $confirm = [System.Windows.MessageBox]::Show($Messageboxbody, $MessageboxTitle, $ButtonType, $MessageIcon)
 
     if($confirm -eq "No"){return}
 
-    Invoke-WPFRunspace -ArgumentList $WingetInstall -DebugPreference $DebugPreference -ScriptBlock {
-        param($WingetInstall, $DebugPreference)
-
+    Invoke-WPFRunspace -ArgumentList $PackagesToInstall -DebugPreference $DebugPreference -ScriptBlock {
+        param($PackagesToInstall, $DebugPreference)
+        $packagesWinget, $packagesChoco = {
+            $packagesWinget = [System.Collections.Generic.List`1[System.Object]]::new()
+            $packagesChoco = [System.Collections.Generic.List`1[System.Object]]::new()
+            foreach ($package in $PackagesToInstall) {
+                if ($package.winget -eq "na") {
+                    $packagesChoco.add($package)
+                    Write-Host "Queueing $($package.choco) for Chocolatey Uninstall"
+                } else {
+                    $packagesWinget.add($package)
+                    Write-Host "Queueing $($package.winget) for Winget Uninstall"
+                }
+            }
+            return $packagesWinget, $packagesChoco
+        }.Invoke($PackagesToInstall)
         try{
             $sync.ProcessRunning = $true
 
             # Install all selected programs in new window
-            Install-WinUtilProgramWinget -ProgramsToInstall $WingetInstall -Manage "Uninstalling"
+            if($packagesWinget.Count -gt 0){
+                Install-WinUtilProgramWinget -ProgramsToInstall $PackagesToInstall -Manage "Uninstalling"
+            }
+            if($packagesChoco.Count -gt 0){
+                Install-WinUtilProgramChoco -ProgramsToInstall $PackagesToInstall -Manage "Uninstalling"
+            }
 
             $ButtonType = [System.Windows.MessageBoxButton]::OK
             $MessageboxTitle = "Uninstalls are Finished "
@@ -7851,7 +8084,7 @@ $sync.configs.feature = '{
   }
 }' | convertfrom-json
 $sync.configs.preset = '{
-  "desktop": [
+  "Standard": [
     "WPFTweaksAH",
     "WPFTweaksDVR",
     "WPFTweaksHiber",
@@ -7861,21 +8094,14 @@ $sync.configs.preset = '{
     "WPFTweaksServices",
     "WPFTweaksStorage",
     "WPFTweaksTele",
-    "WPFTweaksWifi"
-  ],
-  "laptop": [
-    "WPFTweaksAH",
-    "WPFTweaksDVR",
-    "WPFTweaksHome",
-    "WPFTweaksLoc",
-    "WPFTweaksOO",
-    "WPFTweaksServices",
-    "WPFTweaksStorage",
-    "WPFTweaksTele",
     "WPFTweaksWifi",
-    "WPFMiscTweaksLapPower"
+    "WPFTweaksDiskCleanup",
+    "WPFTweaksDeleteTempFiles",
+    "WPFTweaksEndTaskOnTaskbar",
+    "WPFTweaksRestorePoint",
+    "WPFTweaksTeredo"
   ],
-  "minimal": [
+  "Minimal": [
     "WPFTweaksHome",
     "WPFTweaksOO",
     "WPFTweaksServices",
@@ -10503,6 +10729,494 @@ $sync.configs.tweaks = '{
     "Type": "300"
   }
 }' | convertfrom-json
+$sync.configs.ooshutup10_factory = '############################################################################
+# This file was created with O&O ShutUp10++ V1.9.1436
+# and can be imported onto another computer. 
+#
+# Download the application at https://www.oo-software.com/shutup10
+# You can then import the file from within the program. 
+#
+# Alternatively you can import it automatically over a command line.
+# Simply use the following parameter: 
+# OOSU10.exe <path to file>
+# 
+# Selecting the Option /quiet ends the app right after the import and the
+# user does not get any feedback about the import.
+#
+# We are always happy to answer any questions you may have!
+# ? 2015-2023 O&O Software GmbH, Berlin. All rights reserved.
+# https://www.oo-software.com/
+############################################################################
+
+P001	-
+P002	-
+P003	-
+P004	-
+P005	-
+P006	-
+P008	-
+P026	-
+P027	-
+P028	-
+P064	-
+P065	-
+P066	-
+P067	-
+P070	-
+P069	-
+P009	-
+P010	-
+P015	-
+P068	-
+P016	-
+A001	-
+A002	-
+A003	-
+A004	-
+A006	-
+A005	-
+P007	-
+P036	-
+P025	-
+P033	-
+P023	-
+P056	-
+P057	-
+P012	-
+P034	-
+P013	-
+P035	-
+P062	-
+P063	-
+P081	-
+P047	-
+P019	-
+P048	-
+P049	-
+P020	-
+P037	-
+P011	-
+P038	-
+P050	-
+P051	-
+P018	-
+P039	-
+P021	-
+P040	-
+P022	-
+P041	-
+P014	-
+P042	-
+P052	-
+P053	-
+P054	-
+P055	-
+P029	-
+P043	-
+P030	-
+P044	-
+P031	-
+P045	-
+P032	-
+P046	-
+P058	-
+P059	-
+P060	-
+P061	-
+P071	-
+P072	-
+P073	-
+P074	-
+P075	-
+P076	-
+P077	-
+P078	-
+P079	-
+P080	-
+P024	-
+S001	-
+S002	-
+S003	-
+S008	-
+E101	-
+E201	-
+E115	-
+E215	-
+E118	-
+E218	-
+E107	-
+E207	-
+E111	-
+E211	-
+E112	-
+E212	-
+E109	-
+E209	-
+E121	-
+E221	-
+E103	-
+E203	-
+E123	-
+E223	-
+E124	-
+E224	-
+E128	-
+E228	-
+E119	-
+E219	-
+E120	-
+E220	-
+E122	-
+E222	-
+E125	-
+E225	-
+E126	-
+E226	-
+E106	-
+E206	-
+E127	-
+E227	-
+E001	-
+E002	-
+E003	-
+E008	-
+E007	-
+E010	-
+E011	+
+E012	+
+E009	-
+E004	-
+E005	-
+E013	-
+E014	-
+E006	-
+F002	-
+F014	-
+F015	-
+F016	-
+F001	-
+F003	-
+F004	-
+F005	-
+F007	-
+F008	-
+F009	-
+F006	-
+F010	-
+F011	-
+F012	-
+F013	-
+Y001	-
+Y002	-
+Y003	-
+Y004	-
+Y005	-
+Y006	-
+Y007	-
+C012	-
+C002	-
+C013	-
+C007	-
+C008	-
+C009	-
+C010	-
+C011	-
+C014	-
+C015	-
+C101	-
+C201	-
+C102	-
+L001	-
+L003	-
+L004	-
+L005	-
+U001	-
+U004	-
+U005	-
+U006	-
+U007	-
+W001	-
+W011	-
+W004	-
+W005	-
+W010	-
+W009	-
+P017	-
+W006	-
+W008	-
+M006	-
+M011	-
+M010	-
+O003	-
+O001	-
+S012	-
+S013	-
+S014	-
+K001	-
+K002	-
+K005	-
+M025	-
+M003	-
+M015	-
+M016	-
+M017	-
+M018	-
+M019	-
+M020	-
+M021	-
+M022	-
+M001	-
+M004	-
+M005	-
+M024	-
+M012	-
+M013	-
+M014	-
+N001	-'
+$sync.configs.ooshutup10_recommended = '############################################################################
+# This file was created with O&O ShutUp10++ V1.9.1436
+# and can be imported onto another computer. 
+#
+# Download the application at https://www.oo-software.com/shutup10
+# You can then import the file from within the program. 
+#
+# Alternatively you can import it automatically over a command line.
+# Simply use the following parameter: 
+# OOSU10.exe <path to file>
+# 
+# Selecting the Option /quiet ends the app right after the import and the
+# user does not get any feedback about the import.
+#
+# We are always happy to answer any questions you may have!
+# ? 2015-2023 O&O Software GmbH, Berlin. All rights reserved.
+# https://www.oo-software.com/
+############################################################################
+
+P001	+
+P002	+
+P003	+
+P004	+
+P005	+
+P006	+
+P008	+
+P026	+
+P027	+
+P028	+
+P064	+
+P065	+
+P066	+
+P067	+
+P070	+
+P069	+
+P009	-
+P010	-
+P015	-
+P068	-
+P016	-
+A001	+
+A002	+
+A003	+
+A004	+
+A006	+
+A005	+
+P007	+
+P036	+
+P025	+
+P033	+
+P023	+
+P056	-
+P057	-
+P012	-
+P034	-
+P013	-
+P035	-
+P062	-
+P063	-
+P081	-
+P047	-
+P019	-
+P048	-
+P049	-
+P020	-
+P037	-
+P011	-
+P038	-
+P050	-
+P051	-
+P018	-
+P039	-
+P021	-
+P040	-
+P022	-
+P041	-
+P014	-
+P042	-
+P052	-
+P053	-
+P054	-
+P055	-
+P029	-
+P043	-
+P030	-
+P044	-
+P031	-
+P045	-
+P032	-
+P046	-
+P058	-
+P059	-
+P060	-
+P061	-
+P071	-
+P072	-
+P073	-
+P074	-
+P075	-
+P076	-
+P077	-
+P078	-
+P079	-
+P080	-
+P024	-
+S001	+
+S002	+
+S003	+
+S008	-
+E101	+
+E201	+
+E115	+
+E215	+
+E118	+
+E218	+
+E107	+
+E207	+
+E111	+
+E211	+
+E112	+
+E212	+
+E109	+
+E209	+
+E121	+
+E221	+
+E103	+
+E203	+
+E123	+
+E223	+
+E124	+
+E224	+
+E128	+
+E228	+
+E119	-
+E219	-
+E120	-
+E220	-
+E122	-
+E222	-
+E125	-
+E225	-
+E126	-
+E226	-
+E106	-
+E206	-
+E127	-
+E227	-
+E001	+
+E002	+
+E003	+
+E008	+
+E007	+
+E010	+
+E011	+
+E012	+
+E009	-
+E004	-
+E005	-
+E013	-
+E014	-
+E006	-
+F002	+
+F014	+
+F015	+
+F016	+
+F001	+
+F003	+
+F004	+
+F005	+
+F007	+
+F008	+
+F009	+
+F006	-
+F010	-
+F011	-
+F012	-
+F013	-
+Y001	+
+Y002	+
+Y003	+
+Y004	+
+Y005	+
+Y006	+
+Y007	+
+C012	+
+C002	+
+C013	+
+C007	+
+C008	+
+C009	+
+C010	+
+C011	+
+C014	+
+C015	+
+C101	+
+C201	+
+C102	+
+L001	+
+L003	+
+L004	-
+L005	-
+U001	+
+U004	+
+U005	+
+U006	+
+U007	+
+W001	+
+W011	+
+W004	-
+W005	-
+W010	-
+W009	-
+P017	-
+W006	-
+W008	-
+M006	+
+M011	-
+M010	-
+O003	-
+O001	-
+S012	-
+S013	-
+S014	-
+K001	+
+K002	+
+K005	+
+M025	+
+M003	-
+M015	-
+M016	-
+M017	-
+M018	-
+M019	-
+M020	-
+M021	-
+M022	+
+M001	+
+M004	+
+M005	+
+M024	+
+M012	-
+M013	-
+M014	-
+N001	-'
 $inputXML =  '<Window x:Class="WinUtility.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -10800,7 +11514,7 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
              <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
-                        <Grid Background="{TemplateBinding Background}">
+                        <Grid Background="{TemplateBinding Background}" Margin="6,0,0,0">
                             <BulletDecorator Background="Transparent">
                                 <BulletDecorator.Bullet>
                                     <Grid Width="16" Height="16">
@@ -10912,10 +11626,10 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type ToggleButton}">
-                        <Grid x:Name="toggleSwitch">
-                            <Border x:Name="Border" CornerRadius="10"
+                        <Grid x:Name="toggleSwitch" Margin="10,0,0,0">
+                            <Border x:Name="Border" CornerRadius="11"
                                     Background="#FFFFFFFF"
-                                    Width="70" Height="25">
+                                    Width="50" Height="25">
                                 <Border.Effect>
                                     <DropShadowEffect ShadowDepth="0.5" Direction="0" Opacity="0.3" />
                                 </Border.Effect>
@@ -10929,16 +11643,12 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
                                 </Ellipse>
                             </Border>
 
-                            <TextBlock x:Name="txtDisable" Text="Disable " VerticalAlignment="Center" FontWeight="DemiBold" HorizontalAlignment="Right" Foreground="White" FontSize="12" />
-                            <TextBlock x:Name="txtEnable" Text="  Enable" VerticalAlignment="Center" FontWeight="DemiBold" Foreground="White" HorizontalAlignment="Left" FontSize="12" />
                         </Grid>
 
                         <ControlTemplate.Triggers>
                             <Trigger Property="ToggleButton.IsChecked" Value="False">
                                 <Setter TargetName="Border" Property="Background" Value="#C2283B" />
                                 <Setter TargetName="Ellipse" Property="Margin" Value="2 2 2 1" />
-                                <Setter TargetName="txtDisable" Property="Opacity" Value="1.0" />
-                                <Setter TargetName="txtEnable" Property="Opacity" Value="0.0" />
                             </Trigger>
 
                             <Trigger Property="ToggleButton.IsChecked" Value="True">
@@ -10951,15 +11661,7 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
 
                                             <ThicknessAnimation Storyboard.TargetName="Ellipse"
                                                     Storyboard.TargetProperty="Margin"
-                                                    To="46 2 2 1" Duration="0:0:0.1" />
-
-                                            <DoubleAnimation Storyboard.TargetName="txtDisable"
-                                                    Storyboard.TargetProperty="(TextBlock.Opacity)"
-                                                    To="0.0" Duration="0:0:0:0.1" />
-
-                                            <DoubleAnimation Storyboard.TargetName="txtEnable"
-                                                    Storyboard.TargetProperty="(TextBlock.Opacity)"
-                                                    To="1.0" Duration="0:0:0:0.1" />
+                                                    To="26 2 2 1" Duration="0:0:0.1" />
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </Trigger.EnterActions>
@@ -10974,15 +11676,7 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
 
                                             <ThicknessAnimation Storyboard.TargetName="Ellipse"
                                                     Storyboard.TargetProperty="Margin"
-                                                    To="2 2 2 1" Duration="0:0:0.1" />
-
-                                            <DoubleAnimation Storyboard.TargetName="txtDisable"
-                                                    Storyboard.TargetProperty="(TextBlock.Opacity)"
-                                                    To="1.0" Duration="0:0:0:0.1" />
-
-                                            <DoubleAnimation Storyboard.TargetName="txtEnable"
-                                                    Storyboard.TargetProperty="(TextBlock.Opacity)"
-                                                    To="0.0" Duration="0:0:0:0.1" />
+                                                    To="2 2 2 1" Duration="0:0:0.1" /> 
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </Trigger.ExitActions>
@@ -12293,40 +12987,40 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
 <StackPanel Background="{MainBackgroundColor}" SnapsToDevicePixels="True">
 <Label Content="Customize Preferences" FontSize="16"/>
 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-<Label Content="Dark Theme" Style="{StaticResource labelfortweaks}" ToolTip="Enable/Disable Dark Mode." />
 <CheckBox Name="WPFToggleDarkMode" Style="{StaticResource ColorfulToggleSwitchStyle}" Margin="2.5,0"/>
+<Label Content="Dark Theme" Style="{StaticResource labelfortweaks}" ToolTip="Enable/Disable Dark Mode." />
 </StackPanel>
 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-<Label Content="Bing Search in Start Menu" Style="{StaticResource labelfortweaks}" ToolTip="If enable then includes web search results from Bing in your Start Menu search." />
 <CheckBox Name="WPFToggleBingSearch" Style="{StaticResource ColorfulToggleSwitchStyle}" Margin="2.5,0"/>
+<Label Content="Bing Search in Start Menu" Style="{StaticResource labelfortweaks}" ToolTip="If enable then includes web search results from Bing in your Start Menu search." />
 </StackPanel>
 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-<Label Content="NumLock on Startup" Style="{StaticResource labelfortweaks}" ToolTip="Toggle the Num Lock key state when your computer starts." />
 <CheckBox Name="WPFToggleNumLock" Style="{StaticResource ColorfulToggleSwitchStyle}" Margin="2.5,0"/>
+<Label Content="NumLock on Startup" Style="{StaticResource labelfortweaks}" ToolTip="Toggle the Num Lock key state when your computer starts." />
 </StackPanel>
 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-<Label Content="Verbose Logon Messages" Style="{StaticResource labelfortweaks}" ToolTip="Show detailed messages during the login process for troubleshooting and diagnostics." />
 <CheckBox Name="WPFToggleVerboseLogon" Style="{StaticResource ColorfulToggleSwitchStyle}" Margin="2.5,0"/>
+<Label Content="Verbose Logon Messages" Style="{StaticResource labelfortweaks}" ToolTip="Show detailed messages during the login process for troubleshooting and diagnostics." />
 </StackPanel>
 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-<Label Content="Show File Extensions" Style="{StaticResource labelfortweaks}" ToolTip="If enabled then File extensions (e.g., .txt, .jpg) are visible." />
 <CheckBox Name="WPFToggleShowExt" Style="{StaticResource ColorfulToggleSwitchStyle}" Margin="2.5,0"/>
+<Label Content="Show File Extensions" Style="{StaticResource labelfortweaks}" ToolTip="If enabled then File extensions (e.g., .txt, .jpg) are visible." />
 </StackPanel>
 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-<Label Content="Snap Assist Flyout" Style="{StaticResource labelfortweaks}" ToolTip="If enabled then Snap preview is disabled when maximize button is hovered." />
 <CheckBox Name="WPFToggleSnapFlyout" Style="{StaticResource ColorfulToggleSwitchStyle}" Margin="2.5,0"/>
+<Label Content="Snap Assist Flyout" Style="{StaticResource labelfortweaks}" ToolTip="If enabled then Snap preview is disabled when maximize button is hovered." />
 </StackPanel>
 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-<Label Content="Mouse Acceleration" Style="{StaticResource labelfortweaks}" ToolTip="If Enabled then Cursor movement is affected by the speed of your physical mouse movements." />
 <CheckBox Name="WPFToggleMouseAcceleration" Style="{StaticResource ColorfulToggleSwitchStyle}" Margin="2.5,0"/>
+<Label Content="Mouse Acceleration" Style="{StaticResource labelfortweaks}" ToolTip="If Enabled then Cursor movement is affected by the speed of your physical mouse movements." />
 </StackPanel>
 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-<Label Content="Sticky Keys" Style="{StaticResource labelfortweaks}" ToolTip="If Enabled then Sticky Keys is activated - Sticky keys is an accessibility feature of some graphical user interfaces which assists users who have physical disabilities or help users reduce repetitive strain injury." />
 <CheckBox Name="WPFToggleStickyKeys" Style="{StaticResource ColorfulToggleSwitchStyle}" Margin="2.5,0"/>
+<Label Content="Sticky Keys" Style="{StaticResource labelfortweaks}" ToolTip="If Enabled then Sticky Keys is activated - Sticky keys is an accessibility feature of some graphical user interfaces which assists users who have physical disabilities or help users reduce repetitive strain injury." />
 </StackPanel>
 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-<Label Content="Taskbar Widgets" Style="{StaticResource labelfortweaks}" ToolTip="If Enabled then Widgets Icon in Taskbar will be shown." />
 <CheckBox Name="WPFToggleTaskbarWidgets" Style="{StaticResource ColorfulToggleSwitchStyle}" Margin="2.5,0"/>
+<Label Content="Taskbar Widgets" Style="{StaticResource labelfortweaks}" ToolTip="If Enabled then Widgets Icon in Taskbar will be shown." />
 </StackPanel>
 <Label Content="Performance Plans" FontSize="16"/>
 <Button Name="WPFAddUltPerf" Content="Add and Activate Ultimate Performance Profile" HorizontalAlignment = "Left" Width="300" Margin="5" Padding="20,5" />
@@ -12340,8 +13034,7 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
 
                     <StackPanel Background="{MainBackgroundColor}" Orientation="Horizontal" HorizontalAlignment="Left" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="10">
                         <Label Content="Recommended Selections:" FontSize="14" VerticalAlignment="Center"/>
-                        <Button Name="WPFdesktop" Content=" Desktop " Margin="1"/>
-                        <Button Name="WPFlaptop" Content=" Laptop " Margin="1"/>
+                        <Button Name="WPFstandard" Content=" Standard " Margin="1"/>
                         <Button Name="WPFminimal" Content=" Minimal " Margin="1"/>
                         <Button Name="WPFclear" Content=" Clear " Margin="1"/>
                         <Button Name="WPFGetInstalledTweaks" Content=" Get Installed " Margin="1"/>
@@ -12508,6 +13201,9 @@ $inputXML =  '<Window x:Class="WinUtility.MainWindow"
                                 Foreground="{LabelboxForegroundColor}"
                                 ToolTip="Path to unpacked drivers all sys and inf files for devices that need drivers"
                             />
+
+                            <CheckBox Name="MicrowinImportDrivers" Content="Import drivers from current system" Margin="5,0" IsChecked="False" ToolTip="Export all third-party drivers from your system and inject them to the MicroWin image"/>
+
                             <Rectangle Fill="{MainForegroundColor}" Height="2" HorizontalAlignment="Stretch" Margin="0,10,0,10"/>
                             <CheckBox Name="WPFMicrowinCopyToUsb" Content="Copy to Ventoy" Margin="5,0" IsChecked="False" ToolTip="Copy to USB disk with a label Ventoy"/>
                             <Rectangle Fill="{MainForegroundColor}" Height="2" HorizontalAlignment="Stretch" Margin="0,10,0,10"/>
