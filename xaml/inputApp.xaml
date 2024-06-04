@@ -473,9 +473,6 @@
 <StackPanel Orientation="Horizontal">
 <CheckBox Name="WPFInstallvc2015_64" Content="Visual C++ 2015-2022 64-bit" ToolTip="Visual C++ 2015-2022 64-bit redistributable package installs runtime components of Visual C++ libraries required to run 64-bit applications." Margin="0,0,2,0"/><TextBlock Name="WPFInstallvc2015_64Link" Style="{StaticResource HoverTextBlockStyle}" Text="(?)" ToolTip="https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads" />
 </StackPanel>
-<StackPanel Orientation="Horizontal">
-<CheckBox Name="WPFInstallveracrypt" Content="Microsoft 365 Apps for enterprise" ToolTip="Microsoft 365 Apps for enterprise is the most productive and most secure Office experience for enterprises, allowing your teams to work together seamlessly from anywhere, anytime." Margin="0,0,2,0"/><TextBlock Name="WPFInstallveracryptLink" Style="{StaticResource HoverTextBlockStyle}" Text="(?)" ToolTip="https://www.microsoft.com/en-us/microsoft-365/enterprise/microsoft-365-apps-for-enterprise" />
-</StackPanel>
 <Label Content="Multimedia Tools" FontSize="16"/>
 <StackPanel Orientation="Horizontal">
 <CheckBox Name="WPFInstallaimp" Content="AIMP (Music Player)" ToolTip="AIMP is a feature-rich music player with support for various audio formats, playlists, and customizable user interface." Margin="0,0,2,0"/><TextBlock Name="WPFInstallaimpLink" Style="{StaticResource HoverTextBlockStyle}" Text="(?)" ToolTip="https://www.aimp.ru/" />
@@ -606,14 +603,14 @@
 <StackPanel Orientation="Horizontal">
 <CheckBox Name="WPFInstallvideomass" Content="Videomass" ToolTip="Videomass by GianlucaPernigotto is a cross-platform GUI for FFmpeg, streamlining multimedia file processing with batch conversions and user-friendly features." Margin="0,0,2,0"/><TextBlock Name="WPFInstallvideomassLink" Style="{StaticResource HoverTextBlockStyle}" Text="(?)" ToolTip="https://jeanslack.github.io/Videomass/" />
 </StackPanel>
+<StackPanel Orientation="Horizontal">
+<CheckBox Name="WPFInstallvlc" Content="VLC (Video Player)" ToolTip="VLC Media Player is a free and open-source multimedia player that supports a wide range of audio and video formats. It is known for its versatility and cross-platform compatibility." Margin="0,0,2,0"/><TextBlock Name="WPFInstallvlcLink" Style="{StaticResource HoverTextBlockStyle}" Text="(?)" ToolTip="https://www.videolan.org/vlc/" />
+</StackPanel>
 
 </StackPanel>
 </Border>
 <Border Grid.Row="1" Grid.Column="3">
 <StackPanel Background="{MainBackgroundColor}" SnapsToDevicePixels="True">
-<StackPanel Orientation="Horizontal">
-<CheckBox Name="WPFInstallvlc" Content="VLC (Video Player)" ToolTip="VLC Media Player is a free and open-source multimedia player that supports a wide range of audio and video formats. It is known for its versatility and cross-platform compatibility." Margin="0,0,2,0"/><TextBlock Name="WPFInstallvlcLink" Style="{StaticResource HoverTextBlockStyle}" Text="(?)" ToolTip="https://www.videolan.org/vlc/" />
-</StackPanel>
 <StackPanel Orientation="Horizontal">
 <CheckBox Name="WPFInstallvoicemeeter" Content="Voicemeeter (Audio)" ToolTip="Voicemeeter is a virtual audio mixer that allows you to manage and enhance audio streams on your computer. It is commonly used for audio recording and streaming purposes." Margin="0,0,2,0"/><TextBlock Name="WPFInstallvoicemeeterLink" Style="{StaticResource HoverTextBlockStyle}" Text="(?)" ToolTip="https://www.vb-audio.com/Voicemeeter/" />
 </StackPanel>
@@ -805,14 +802,14 @@
 <StackPanel Orientation="Horizontal">
 <CheckBox Name="WPFInstalllinkshellextension" Content="Link Shell extension" ToolTip="Link Shell Extension (LSE) provides for the creation of Hardlinks, Junctions, Volume Mountpoints, Symbolic Links, a folder cloning process that utilises Hardlinks or Symbolic Links and a copy process taking care of Junctions, Symbolic Links, and Hardlinks. LSE, as its name implies is implemented as a Shell extension and is accessed from Windows Explorer, or similar file/folder managers." Margin="0,0,2,0"/><TextBlock Name="WPFInstalllinkshellextensionLink" Style="{StaticResource HoverTextBlockStyle}" Text="(?)" ToolTip="https://schinagl.priv.at/nt/hardlinkshellext/hardlinkshellext.html" />
 </StackPanel>
+<StackPanel Orientation="Horizontal">
+<CheckBox Name="WPFInstalllivelywallpaper" Content="Lively Wallpaper" ToolTip="Free and open-source software that allows users to set animated desktop wallpapers and screensavers." Margin="0,0,2,0"/><TextBlock Name="WPFInstalllivelywallpaperLink" Style="{StaticResource HoverTextBlockStyle}" Text="(?)" ToolTip="https://www.rocksdanister.com/lively/" />
+</StackPanel>
 
 </StackPanel>
 </Border>
 <Border Grid.Row="1" Grid.Column="4">
 <StackPanel Background="{MainBackgroundColor}" SnapsToDevicePixels="True">
-<StackPanel Orientation="Horizontal">
-<CheckBox Name="WPFInstalllivelywallpaper" Content="Lively Wallpaper" ToolTip="Free and open-source software that allows users to set animated desktop wallpapers and screensavers." Margin="0,0,2,0"/><TextBlock Name="WPFInstalllivelywallpaperLink" Style="{StaticResource HoverTextBlockStyle}" Text="(?)" ToolTip="https://www.rocksdanister.com/lively/" />
-</StackPanel>
 <StackPanel Orientation="Horizontal">
 <CheckBox Name="WPFInstalllocalsend" Content="LocalSend" ToolTip="An open source cross-platform alternative to AirDrop." Margin="0,0,2,0"/><TextBlock Name="WPFInstalllocalsendLink" Style="{StaticResource HoverTextBlockStyle}" Text="(?)" ToolTip="https://localsend.org/" />
 </StackPanel>
@@ -965,6 +962,9 @@
 </StackPanel>
 <StackPanel Orientation="Horizontal">
 <CheckBox Name="WPFInstallultravnc" Content="UltraVNC" ToolTip="UltraVNC is a powerful, easy to use and free - remote pc access softwares - that can display the screen of another computer (via internet or network) on your own screen. The program allows you to use your mouse and keyboard to control the other PC remotely. It means that you can work on a remote computer, as if you were sitting in front of it, right from your current location." Margin="0,0,2,0"/><TextBlock Name="WPFInstallultravncLink" Style="{StaticResource HoverTextBlockStyle}" Text="(?)" ToolTip="https://uvnc.com/" />
+</StackPanel>
+<StackPanel Orientation="Horizontal">
+<CheckBox Name="WPFInstallveracrypt" Content="FileZilla" ToolTip="FileZilla - The free FTP solution" Margin="0,0,2,0"/><TextBlock Name="WPFInstallveracryptLink" Style="{StaticResource HoverTextBlockStyle}" Text="(?)" ToolTip="https://filezilla-project.org" />
 </StackPanel>
 <StackPanel Orientation="Horizontal">
 <CheckBox Name="WPFInstallvistaswitcher" Content="VistaSwitcher" ToolTip="VistaSwitcher makes it easier for you to locate windows and switch focus, even on multi-monitor systems. The switcher window consists of an easy-to-read list of all tasks running with clearly shown titles and a full-sized preview of the selected task." Margin="0,0,2,0"/><TextBlock Name="WPFInstallvistaswitcherLink" Style="{StaticResource HoverTextBlockStyle}" Text="(?)" ToolTip="https://www.ntwind.com/freeware/vistaswitcher.html" />
